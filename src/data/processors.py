@@ -1,6 +1,37 @@
 import chess
 from itertools import product
 
+from chess import Move
+from typing import Dict
+import numpy as np
+
+class MoveConverter:
+    def __init__(self):
+        self.move_vocab = self.create_move_vocabulary()
+        self.reverse_vocab = {v: k for k, v in self.move_vocab.items()}
+
+    def san_to_uci(self, san: str, board: chess.Board) -> str:
+        try:
+            move = board.parse_san(san)
+            return move.uci()
+        except:
+            return None
+        
+    def create_move_vocabulary(self) -> Dict[str, int]:
+        return create_move_vocabulary()
+
+    def convert_san_sequence(self, sans: "List[str]") -> np.ndarray:
+        board = chess.Board()
+        uci_moves = []
+        
+        for san in sans:
+            uci = self.san_to_uci(san, board)
+            if uci:
+                uci_moves.append(uci)
+                board.push_uci(uci)
+        
+        return np.array([self.move_vocab.get(m, -1) for m in uci_moves])
+
 def create_move_vocabulary():
     moves = {}
     index = 0

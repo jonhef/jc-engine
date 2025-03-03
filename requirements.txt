@@ -2,3 +2,8 @@ tensorflow
 chess
 numpy
 requests
+requests>=2.26.0
+python-chess>=1.9.0
+pytest-mock>=3.6.1
+tqdm
+h5py

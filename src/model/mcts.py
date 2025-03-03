@@ -3,21 +3,6 @@ from engine.board import ChessBoard
 import tensorflow as tf
 
 class MCTSNode:
-    def __init__(self, chess_board):
-        self.chess_board = chess_board  # Объект ChessBoard
-        self.children = {}
-        self.visit_count = 0
-        self.value_sum = 0.0
-    
-    def is_terminal(self):
-        return self.chess_board.board.is_game_over()
-    
-    def ucb_score(self, parent_visits, exploration=1.41):
-        if self.visit_count == 0:
-            return float('inf')
-        return (self.value_sum / self.visit_count) + exploration * np.sqrt(np.log(parent_visits) / self.visit_count)
-
-class MCTSNode:
     def __init__(self, board, parent=None):
         self.board = board.copy()  # chess.Board, а не ChessBoard
         self.parent = parent
