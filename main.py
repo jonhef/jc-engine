@@ -8,6 +8,7 @@ from data.processors import MoveConverter
 from config.settings import Config
 import h5py
 import numpy as np
+from data.converters import fen_to_tensor
 
 class ChessDatasetCreator:
     def __init__(self):

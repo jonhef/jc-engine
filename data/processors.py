@@ -20,7 +20,7 @@ class MoveConverter:
     def create_move_vocabulary(self) -> Dict[str, int]:
         return create_move_vocabulary()
 
-    def convert_san_sequence(self, sans: "List[str]") -> np.ndarray:
+    def convert_san_sequence(self, sans: list[str]) -> np.ndarray:
         board = chess.Board()
         uci_moves = []
         
