@@ -1,11 +1,25 @@
 import numpy as np
-import chess
 from engine.board import ChessBoard
-from config.settings import Config
+import tensorflow as tf
+
+class MCTSNode:
+    def __init__(self, chess_board):
+        self.chess_board = chess_board  # Объект ChessBoard
+        self.children = {}
+        self.visit_count = 0
+        self.value_sum = 0.0
+    
+    def is_terminal(self):
+        return self.chess_board.board.is_game_over()
+    
+    def ucb_score(self, parent_visits, exploration=1.41):
+        if self.visit_count == 0:
+            return float('inf')
+        return (self.value_sum / self.visit_count) + exploration * np.sqrt(np.log(parent_visits) / self.visit_count)
 
 class MCTSNode:
     def __init__(self, board, parent=None):
-        self.board = board.copy()
+        self.board = board.copy()  # chess.Board, а не ChessBoard
         self.parent = parent
         self.children = {}
         self.visit_count = 0
@@ -15,10 +29,8 @@ class MCTSNode:
     def is_terminal(self):
         return self.board.is_game_over()
     
-    def ucb_score(self):
-        if self.visit_count == 0:
-            return float('inf')
-        return (self.value_sum / self.visit_count) + Config.C_PUCT * self.prior * np.sqrt(self.parent.visit_count) / (1 + self.visit_count)
+    def expanded(self):
+        return len(self.children) > 0
 
 class MCTS:
     def __init__(self, model):
@@ -27,26 +39,30 @@ class MCTS:
     def search(self, root, simulations):
         for _ in range(simulations):
             node = root
-            while not node.is_terminal() and node.children:
+            search_path = [node]
+            
+            # Selection
+            while not node.is_terminal() and node.expanded():
                 node = max(node.children.values(), key=lambda n: n.ucb_score())
+                search_path.append(node)
             
+            # Expansion
             if not node.is_terminal():
-                policy, value = self.model.predict(node.board.to_tensor())
-                self.expand(node, policy.numpy())
+                policy, value = self.model.predict(node.to_tensor())
+                self.expand(node, policy)
+                search_path.append(node)
             
-            self.backpropagate(node, value.numpy()[0])
-        return root
+            # Backpropagation
+            self.backpropagate(search_path, value)
     
     def expand(self, node, policy):
-        legal_moves = [move.uci() for move in node.board.legal_moves]
-        for move in legal_moves:
-            new_board = node.board.copy()
-            new_board.push_uci(move)
-            node.children[move] = MCTSNode(new_board, node)
+        for move in node.board.legal_moves:
+            child_board = node.board.copy()
+            child_board.push(move)
+            node.children[move.uci()] = MCTSNode(child_board, node)
     
-    def backpropagate(self, node, value):
-        while node:
+    def backpropagate(self, path, value):
+        for node in reversed(path):
             node.visit_count += 1
             node.value_sum += value
-            node = node.parent
             value = -value

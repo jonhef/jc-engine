@@ -19,17 +19,22 @@ def fen_to_tensor(fen: str) -> tf.Tensor:
     for square in chess.SQUARES:
         piece = board.piece_at(square)
         if piece:
-            row, col = 7 - (square // 8), square % 8
+            row = 7 - (square // 8)  # Инверсия строк для FEN
+            col = square % 8
             channel = piece_channels[(piece.piece_type, piece.color)]
             tensor[row, col, channel] = 1.0
 
-    # Дополнительные каналы
-    tensor[:, :, 12] = 1.0 if board.turn else 0.0  # Очередь хода
+    # Очередь хода (канал 12)
+    turn_channel = 12
+    tensor[:, :, turn_channel] = 1.0 if board.turn else 0.0
+    
+    # Рокировки (каналы 13-16)
     tensor[:, :, 13] = board.has_kingside_castling_rights(chess.WHITE)
     tensor[:, :, 14] = board.has_queenside_castling_rights(chess.WHITE)
     tensor[:, :, 15] = board.has_kingside_castling_rights(chess.BLACK)
     tensor[:, :, 16] = board.has_queenside_castling_rights(chess.BLACK)
     
+    # Взятие на проходе (канал 17)
     if board.ep_square:
         ep_row = 7 - (board.ep_square // 8)
         ep_col = board.ep_square % 8

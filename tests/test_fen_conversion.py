@@ -9,8 +9,8 @@ class TestFENConversion(unittest.TestCase):
         tensor = board.to_tensor()
         
         # Проверка наличия белых фигур
-        self.assertEqual(tensor[7, 0, 3].numpy(), 1.0)  # Ладья
-        self.assertEqual(tensor[7, 1, 1].numpy(), 1.0)  # Конь
+        self.assertEqual(tensor[0, 0, 3].numpy(), 1.0)  # Ладья
+        self.assertEqual(tensor[0, 1, 1].numpy(), 1.0)  # Конь
         
         # Проверка дополнительных каналов
         self.assertEqual(tensor[0, 0, 13].numpy(), 1.0)  # Рокировка
