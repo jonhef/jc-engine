@@ -4,6 +4,8 @@ import chess.pgn
 import io
 import csv
 import time
+import data.settings
+import logging
 
 def get_top_players():
     response = requests.get("https://lichess.org/api/player/top/200/classical")
@@ -46,8 +48,8 @@ def process_game(pgn_text, username, writer):
             board.push(move)
 
     except Exception as e:
-        print(f"Error processing game: {str(e)}")
-        print(f"Problematic PGN fragment: {pgn_text[:200]}...")
+        logging.error(f"Error processing game: {str(e)}")
+        logging.error(f"Problematic PGN fragment: {pgn_text[:200]}...")
 
 def main():
     with open('chess_data.csv', 'w', newline='') as csvfile:
@@ -56,7 +58,7 @@ def main():
         
         top_players = get_top_players()
         for i, username in enumerate(top_players[:200]):
-            print(f"Processing {username} ({i+1}/{len(top_players)})")
+            logging.info(f"Processing {username} ({i+1}/{len(top_players)})")
             games = fetch_games(username)
             
             for pgn in games:

@@ -2,6 +2,8 @@ import math
 import numpy as np
 import chess
 from collections import defaultdict
+import data.settings
+import logging
 
 class MCTSNode:
     def __init__(self, parent=None, prior=0):
@@ -73,6 +75,7 @@ class MCTS:
                 idx += 1
                 
         # print(len(move_map))
+        logging.info(f"Loaded {len(move_map)} moves")
         
         return move_map
     

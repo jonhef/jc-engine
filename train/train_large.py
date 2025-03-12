@@ -9,6 +9,7 @@ from data.settings import TrainingConfig, BigDataConfig, SystemConfig
 from torch.utils.data import Dataset, DataLoader
 from data.data_processing import fen_to_tensor, move_to_indices
 import argparse
+import logging
 
 # train_large.py
 class ChunkedDataset(Dataset):
@@ -46,8 +47,8 @@ def train_on_chunk(model, optimizer, chunk_path, device):
     
     # Проверка одного элемента датасета
     sample = dataset[0]
-    print("Тип x:", type(sample[0]))  # Должно быть torch.Tensor
-    print("Тип y:", type(sample[1]))  # Должно быть tuple of torch.Tensor
+    logging.info("Type of x:", type(sample[0]))  # Должно быть torch.Tensor
+    logging.info("Type of y:", type(sample[1]))  # Должно быть tuple of torch.Tensor
     
     loader = DataLoader(
         dataset,
@@ -85,7 +86,7 @@ def train_on_chunk(model, optimizer, chunk_path, device):
             loss.backward()
             torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
             optimizer.step()
-        print(f"Best loss: {best_loss:.4f}")
+        logging.info(f"Best loss: {best_loss:.4f}")
             
         # Освобождаем память
         del x, y, y_from, y_to
@@ -109,26 +110,26 @@ def main():
         
     # Загрузка чекпоинта
     if os.path.exists(args.checkpoint):
-        print("Loading checkpoint...")
+        logging.info("Loading checkpoint...")
         checkpoint = torch.load(args.checkpoint, map_location=device)
         
         # Проверка наличия ключей
         required_keys = ['model_state_dict', 'optimizer_state_dict']
         try:     
             model.load_state_dict(checkpoint)
-            print("Resuming from checkpoint")
+            logging.info("Resuming from checkpoint")
         except:
             if all(key in checkpoint for key in required_keys):
                 model.load_state_dict(checkpoint['model_state_dict'])
                 optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
                 start_chunk = checkpoint.get('chunk_idx', 0) + 1
-                print(f"Resuming from chunk {start_chunk}")
+                logging.info(f"Resuming from chunk {start_chunk}")
             else:
-                print("Invalid checkpoint format. Starting from scratch.")
+                logging.error("Invalid checkpoint format. Starting from scratch.")
     
     # Итерация по чанкам
-    # start_chunk = BigDataConfig.RESUME_FROM_CHUNK
-    start_chunk = 0
+    start_chunk = BigDataConfig.RESUME_FROM_CHUNK
+    # start_chunk = 0
     for chunk_idx in tqdm(range(start_chunk, len(os.listdir(BigDataConfig.CACHE_DIR)))):
         chunk_path = f"{BigDataConfig.CACHE_DIR}/chunk_{chunk_idx}.csv"
         if not os.path.exists(chunk_path) or args.new_dataset:

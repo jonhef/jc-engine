@@ -7,16 +7,17 @@ import torch.optim as optim
 import torch.nn as nn
 import tqdm
 import argparse
+import logging
 
 def load_model(model_path, device):
     model = ChessNet().to(device)
     try:
         checkpoint = torch.load(model_path, map_location=device)
         model.load_state_dict(checkpoint['model_state_dict'])
-        print(f"Loaded pretrained weights from {model_path}")
+        logging.info(f"Loaded pretrained weights from {model_path}")
         return model
     except Exception as e:
-        print(f"Error loading model: {e}")
+        logging.error(f"Error loading model: {e}")
         return model
 
 def train():
@@ -28,12 +29,12 @@ def train():
     args = parser.parse_args()
     
     device = torch.device(SystemConfig.DEVICE)
-    print("Device:", device)
+    logging.info("Device:", device)
     if args.checkpoint:
         model = load_model(args.checkpoint, device)
     else:
         model = ChessNet().to(device)
-        print("Initializing new model")
+        logging.info("Initializing new model")
     
     dataset = ChessDataset(args.dataset)
     
@@ -72,7 +73,6 @@ def train():
     epoch = 0
     for i in tqdm.tqdm(range(TrainingConfig.NUM_EPOCHS)):
         # Training loop
-        print(f'Epoch {epoch}')
         model.train()
         total_loss = 0.0
         
@@ -99,7 +99,7 @@ def train():
             total_loss += loss.item()
             
             if batch_idx % TrainingConfig.LOG_INTERVAL == 0:
-                print(f"Epoch {epoch+1} Batch {batch_idx} Loss: {loss.item():.4f}")
+                logging.info(f"Epoch {epoch+1} Batch {batch_idx} Loss: {loss.item():.4f}")
 
         # Validation
         model.eval()
@@ -114,7 +114,7 @@ def train():
                 val_loss += (loss_fn(from_pred, from_true) + loss_fn(to_pred, to_true)) / 2
 
         avg_val_loss = val_loss / len(val_loader)
-        print(f"Epoch {epoch+1} Val Loss: {avg_val_loss:.4f}")
+        logging.info(f"Epoch {epoch+1} Val Loss: {avg_val_loss:.4f}")
 
         # Save best model
         if avg_val_loss < best_val_loss:
@@ -125,7 +125,7 @@ def train():
                 'optimizer_state_dict': optimizer.state_dict(),
                 'loss': best_val_loss,
             }, f'best_model_epoch_pretrained_{epoch+1}.pth')
-            print(f"Saved new best model with val loss {best_val_loss:.4f}")
+            logging.error(f"Saved new best model with val loss {best_val_loss:.4f}")
         epoch += 1
 
     # Final save

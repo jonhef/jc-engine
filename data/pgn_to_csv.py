@@ -4,6 +4,7 @@ import os
 from data.settings import Config
 from pathlib import Path
 from tqdm import tqdm  # Для прогресс-бара
+import logging
 
 def process_pgn_file(pgn_path, writer):
     """Обрабатывает один PGN-файл"""
@@ -72,7 +73,7 @@ def main():
             try:
                 process_pgn_file(pgn_path, writer)
             except Exception as e:
-                print(f"Error processing {pgn_path}: {str(e)}")
+                logging.error(f"Error processing {pgn_path}: {str(e)}")
 
 if __name__ == "__main__":
     main()
