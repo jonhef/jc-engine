@@ -3,8 +3,8 @@ import torch
 class BigDataConfig:
     CHUNK_SIZE = 1_000_000     # Размер чанка
     CHECKPOINT_INTERVAL = 1    # Сохранять чекпоинт каждые N чанков
-    RESUME_FROM_CHUNK = 5       # Продолжить с чанка (для рестарта)
-    CACHE_DIR = "./puzzles"  # Директория для кэша
+    RESUME_FROM_CHUNK = 14      # Продолжить с чанка (для рестарта)
+    CACHE_DIR = "./data_cache"  # Директория для кэша
 
 class TrainingConfig:
     BATCH_SIZE = 512         # Увеличиваем размер батча

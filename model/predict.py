@@ -26,30 +26,33 @@ class ChessEngine:
         self.model.eval()
         self.mcts = MCTS(self.model)
     
-    def predict_move(self, fen):
+    def predict_move(self, fen, mcts=True):
         # Преобразование позиции в тензор
         board = chess.Board(fen)
-        # Убираем .unsqueeze(0), если функция уже возвращает правильную размерность
-        input_tensor = fen_to_tensor(fen).unsqueeze(0).to(self.device)
-        
-        with torch.no_grad():
-            from_logits, to_logits = self.model(input_tensor)
-        
-        # Преобразование в вероятности
-        from_probs = torch.softmax(from_logits, dim=1).cpu().numpy()[0]
-        to_probs = torch.softmax(to_logits, dim=1).cpu().numpy()[0]
-        
-        # Поиск лучшего легального хода
-        best_move = None
-        best_score = -1
-        
-        for move in board.legal_moves:
-            score = from_probs[move.from_square] * to_probs[move.to_square]
-            if score > best_score:
-                best_score = score
-                best_move = move
+        if not mcts:
+            # Убираем .unsqueeze(0), если функция уже возвращает правильную размерность
+            input_tensor = fen_to_tensor(fen).unsqueeze(0).to(self.device)
+            
+            with torch.no_grad():
+                from_logits, to_logits = self.model(input_tensor)
+            
+            # Преобразование в вероятности
+            from_probs = torch.softmax(from_logits, dim=1).cpu().numpy()[0]
+            to_probs = torch.softmax(to_logits, dim=1).cpu().numpy()[0]
+            
+            # Поиск лучшего легального хода
+            best_move = None
+            best_score = -1
+            
+            for move in board.legal_moves:
+                score = from_probs[move.from_square] * to_probs[move.to_square]
+                if score > best_score:
+                    best_score = score
+                    best_move = move
+        else:
+            best_move = self.mcts.search(board)
                 
-        return self.mcts.search(board)
+        return best_move.uci()
 
 # Пример использования
 if __name__ == "__main__":

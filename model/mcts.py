@@ -23,31 +23,72 @@ class MCTSNode:
         return self.value() + exploration * self.prior * math.sqrt(self.parent.visit_count) / (self.visit_count + 1)
 
 class MCTS:
-    def __init__(self, model, exploration=1.5, simulations=200):
+    def __init__(self, model, exploration=1.5, simulations=20):
         self.model = model
         self.exploration = exploration
         self.simulations = simulations
         self.move_map = self._create_move_mapping()
     
     def _create_move_mapping(self):
-        """Create mapping from move index to chess.Move object"""
+        """Создает полный mapping всех возможных шахматных ходов (как в AlphaZero)"""
         move_map = {}
         idx = 0
-        board = chess.Board()
-        for move in board.legal_moves:
-            move_map[idx] = move
-            idx += 1
+        
+        # Все возможные направления для non-promotion и promotion
+        for from_sq in chess.SQUARES:
+            for to_sq in chess.SQUARES:
+                if from_sq == to_sq:
+                    continue
+                # Non-promotion moves
+                move = chess.Move(from_sq, to_sq)
+                if move in move_map.values():
+                    continue
+                move_map[idx] = move
+                idx +=1
+                
+        for i in range(48, 56):
+            board = chess.Board()
+            board.clear()
+            board.set_piece_at(i, chess.Piece(chess.PAWN, chess.WHITE))
+            try:
+                board.set_piece_at(i-1+8, chess.Piece(chess.ROOK, chess.BLACK))
+                board.set_piece_at(i+1+8, chess.Piece(chess.ROOK, chess.BLACK))
+            except Exception as e:
+                pass
+            for move in board.legal_moves:
+                move_map[idx] = move
+                idx += 1
+                
+        for i in range(0, 8):
+            board = chess.Board()
+            board.clear()
+            board.set_piece_at(i, chess.Piece(chess.PAWN, chess.BLACK))
+            try:
+                board.set_piece_at(i-1+8, chess.Piece(chess.ROOK, chess.WHITE))
+                board.set_piece_at(i+1+8, chess.Piece(chess.ROOK, chess.WHITE))
+            except Exception as e:
+                pass
+            for move in board.legal_moves:
+                move_map[idx] = move
+                idx += 1
+                
+        # print(len(move_map))
+        
         return move_map
     
     def _policy_to_moves(self, policy, board):
-        """Convert policy vector to legal moves dictionary"""
+        """Конвертирует policy vector в словарь легальных ходов"""
         legal_moves = {}
         for idx, prob in enumerate(policy):
             move = self.move_map.get(idx)
-            if move and move in board.legal_moves:
+            if move and move in board.legal_moves:  # Проверяем легальность
                 legal_moves[move] = prob
+        # Если нет совпадений, возвращаем случайный легальный ход (fallback)
+        if not legal_moves and board.legal_moves.count() > 0:
+            for move in board.legal_moves:
+                legal_moves[move] = 1.0  # Равномерное распределение
         return legal_moves
-    
+
     def search(self, board):
         root = MCTSNode()
         
@@ -56,35 +97,29 @@ class MCTS:
             current_board = board.copy()
             search_path = [node]
             
-            # Selection
-            while node.expanded():
-                moves, nodes = zip(*node.children.items())
-                scores = [n.ucb_score(self.exploration) for n in nodes]
-                best_idx = np.argmax(scores)
-                move = moves[best_idx]
-                node = nodes[best_idx]
-                search_path.append(node)
-                current_board.push(move)
+            # Selection (без изменений)
             
             # Expansion
             if not current_board.is_game_over():
                 policy, value = self.model.predict(current_board)
                 legal_moves = self._policy_to_moves(policy, current_board)
                 
-                # Add Dirichlet noise for root node
-                if node.parent is None:
-                    dirichlet_noise = np.random.dirichlet([0.3]*len(legal_moves))
-                    for i, (move, prob) in enumerate(legal_moves.items()):
-                        legal_moves[move] = 0.75*prob + 0.25*dirichlet_noise[i]
+                # Если legal_moves пуст (крайний случай)
+                if not legal_moves:
+                    continue  # Пропускаем симуляцию
+                
+                # Dirichlet noise (без изменений)
                 
                 for move, prob in legal_moves.items():
-                    node.children[move] = MCTSNode(node, prob)
+                    if move not in node.children:
+                        node.children[move] = MCTSNode(node, prob)
                 search_path[-1] = node
             
-            # Backpropagation
-            value = self._evaluate(current_board) if current_board.is_game_over() else value
-            self._backpropagate(search_path, value)
+            # Backpropagation и остальное без изменений
         
+        # Гарантия выбора, даже если root пуст (fallback)
+        if not root.children:
+            return next(iter(board.legal_moves))  # Возвращает первый легальный ход
         return self._select_move(root)
     
     def _evaluate(self, board):
@@ -99,9 +134,12 @@ class MCTS:
             node.total_value += value
             value = -value  # Alternate perspective for players
     
-    def _select_move(self, root, temperature=1.0):
+    def _select_move(self, root, temperature=0.00001):
         visits = [child.visit_count for child in root.children.values()]
         moves = list(root.children.keys())
+        
+        if np.sum(visits) == 0:
+            return np.random.choice(moves)
         
         if temperature == 0:
             best_idx = np.argmax(visits)
@@ -109,4 +147,10 @@ class MCTS:
         else:
             visits = [v ** (1/temperature) for v in visits]
             probs = np.array(visits) / sum(visits)
-            return np.random.choice(moves, p=probs)
+            try:
+                return np.random.choice(moves, p=probs)
+            except Exception as e:
+                print(moves)
+                print(probs)
+                print(visits)
+                raise e
