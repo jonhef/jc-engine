@@ -10,7 +10,7 @@ class TrainingConfig:
     BATCH_SIZE = 512         # Увеличиваем размер батча
     NUM_EPOCHS = 5           # Количество эпох
     LEARNING_RATE = 0.0001     # Скорость обучения
-    WEIGHT_DECAY = 0.00001     # L2 регуляризация
+    WEIGHT_DECAY = 0.01     # L2 регуляризация
     NUM_WORKERS = 4           # Количество процессов для загрузки данных
     ACCUMULATION_STEPS = 2    # Накопление градиентов для больших батчей
     LOG_INTERVAL = 2*BATCH_SIZE
@@ -25,7 +25,7 @@ class ModelConfig:
     ACTIVATION = "gelu"
 
 class SystemConfig:
-    DEVICE = 'mps' if hasattr(torch.backends, 'mps') and torch.backends.mps.is_available() else 'cpu'
+    DEVICE = 'mps' if hasattr(torch.backends, 'mps') and torch.backends.mps.is_available() else "cuda" if torch.cuda.is_available() else 'cpu'
     PIN_MEMORY = True         # Ускорение передачи данных в GPU
     LOG_INTERVAL = TrainingConfig.BATCH_SIZE*2         # Логирование каждые N батчей
     
