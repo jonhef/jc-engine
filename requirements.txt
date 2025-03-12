@@ -1,0 +1,10 @@
+torch
+requests
+torchvision
+torchaudio
+chess
+pandas
+pygame
+pathlib
+tqdm
+argparse

@@ -1,0 +1,14 @@
+.venv/
+__pycache__/
+.pytest_cache/
+*.pth
+*.csv
+*.pgn
+*.zip
+*.png 
+.gitattributes
+build/
+dist/
+*.spec
+.zshrc
+.DS_Store
