@@ -8,3 +8,4 @@ pygame
 pathlib
 tqdm
 argparse
+csv
