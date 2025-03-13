@@ -4,9 +4,13 @@ from model.model import ChessNet
 from data.data_processing import fen_to_tensor
 import argparse
 from model.mcts import MCTS, MCTSNode
+import logging as log
+
+logging = log.getLogger(__name__)
 
 class ChessEngine:
     def __init__(self, model_path, device='mps'):
+        logging.info(f"Loading model from {model_path}")
         self.model = ChessNet()
         self.device = torch.device(device)
         

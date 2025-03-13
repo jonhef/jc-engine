@@ -9,8 +9,10 @@ from data.settings import TrainingConfig, BigDataConfig, SystemConfig
 from torch.utils.data import Dataset, DataLoader
 from data.data_processing import fen_to_tensor, move_to_indices
 import argparse
-import logging
+import logging as log
 import time
+
+logging = log.getLogger(__name__)
 
 # train_large.py
 class ChunkedDataset(Dataset):
@@ -72,6 +74,7 @@ def train_on_chunk(model, optimizer, chunk_path, device):
     model.train()
 
     best_loss = float('inf')
+    worst_loss = float('-inf')
     for epoch in range(TrainingConfig.NUM_EPOCHS):
         for x, y in tqdm(loader, desc=f"Epoch {epoch+1}"):
             x = x.to(device)
@@ -84,15 +87,21 @@ def train_on_chunk(model, optimizer, chunk_path, device):
             from_pred, to_pred = model(x)
             loss = (loss_fn(from_pred, y_from) + loss_fn(to_pred, y_to)) / 2
             best_loss = min(best_loss, loss.item())
+            worst_loss = max(worst_loss, loss.item())
             loss.backward()
             torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
             optimizer.step()
+
         logging.info(f"Best loss: {best_loss:.4f}")
+        logging.info(f"Worst loss: {worst_loss:.4f}")
             
         # Освобождаем память
         del x, y, y_from, y_to
         gc.collect()
         torch.cuda.empty_cache()
+    
+        best_loss = float('inf')
+        worst_loss = float('-inf')
 
 def main():
     device = torch.device(SystemConfig.DEVICE)
@@ -129,7 +138,7 @@ def main():
                 logging.error("Invalid checkpoint format. Starting from scratch.")
     
     # Итерация по чанкам
-    start_chunk = BigDataConfig.RESUME_FROM_CHUNK
+    # start_chunk = BigDataConfig.RESUME_FROM_CHUNK
     # start_chunk = 0
     for chunk_idx in tqdm(range(start_chunk, len(os.listdir(BigDataConfig.CACHE_DIR)))):
         chunk_path = f"{BigDataConfig.CACHE_DIR}/chunk_{chunk_idx}.csv"

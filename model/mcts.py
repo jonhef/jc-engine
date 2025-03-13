@@ -3,7 +3,9 @@ import numpy as np
 import chess
 from collections import defaultdict
 import data.settings
-import logging
+import logging as log
+
+logging = log.getLogger(__name__)
 
 class MCTSNode:
     def __init__(self, parent=None, prior=0):

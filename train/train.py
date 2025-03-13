@@ -7,7 +7,9 @@ import torch.optim as optim
 import torch.nn as nn
 import tqdm
 import argparse
-import logging
+import logging as log
+
+logging = log.getLogger(__name__)
 
 def load_model(model_path, device):
     model = ChessNet().to(device)
