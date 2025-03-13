@@ -10,6 +10,7 @@ from torch.utils.data import Dataset, DataLoader
 from data.data_processing import fen_to_tensor, move_to_indices
 import argparse
 import logging
+import time
 
 # train_large.py
 class ChunkedDataset(Dataset):
@@ -144,11 +145,14 @@ def main():
         
         # Сохранение чекпоинта
         if chunk_idx % BigDataConfig.CHECKPOINT_INTERVAL == 0:
+            logging.info(f"Saving checkpoint to checkpoint.pth")
             torch.save({
                 'model_state_dict': model.state_dict(),
                 'optimizer_state_dict': optimizer.state_dict(),
                 'chunk_idx': chunk_idx
             }, 'checkpoint.pth')
+            logging.info(f"Saving checkpoint to models/checkpoint_compressed.pth")
+            torch.save(model.state_dict(), "models/checkpoint_compressed.pth")
         
 if __name__ == "__main__":
     main()
