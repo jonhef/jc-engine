@@ -54,7 +54,7 @@ class ChessGame:
                     return
             else:
                 # Ход нейросети
-                move = self.engine.predict_move(self.board.fen())
+                move = self.engine.predict_move(self.board.fen(), False)
                 print(f"Ход нейросети: {move}")
                 
             self.board.push_uci(move)

@@ -47,8 +47,8 @@ def train_on_chunk(model, optimizer, chunk_path, device):
     
     # Проверка одного элемента датасета
     sample = dataset[0]
-    logging.info("Type of x:", type(sample[0]))  # Должно быть torch.Tensor
-    logging.info("Type of y:", type(sample[1]))  # Должно быть tuple of torch.Tensor
+    logging.info(f"Type of x:{type(sample[0])}")  # Должно быть torch.Tensor
+    logging.info(f"Type of y:{type(sample[1])}")  # Должно быть tuple of torch.Tensor
     
     loader = DataLoader(
         dataset,

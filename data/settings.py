@@ -7,11 +7,11 @@ class BigDataConfig:
     CACHE_DIR = "./data_cache"  # Директория для кэша
 
 class TrainingConfig:
-    BATCH_SIZE = 512         # Увеличиваем размер батча
+    BATCH_SIZE = 768         # Увеличиваем размер батча
     NUM_EPOCHS = 5           # Количество эпох
     LEARNING_RATE = 0.0001     # Скорость обучения
     WEIGHT_DECAY = 0.01     # L2 регуляризация
-    NUM_WORKERS = 4           # Количество процессов для загрузки данных
+    NUM_WORKERS = 8           # Количество процессов для загрузки данных
     ACCUMULATION_STEPS = 2    # Накопление градиентов для больших батчей
     LOG_INTERVAL = 2*BATCH_SIZE
     GRAD_CLIP = 1.0
