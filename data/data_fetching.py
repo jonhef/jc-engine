@@ -5,7 +5,9 @@ import io
 import csv
 import time
 import data.settings
-import logging
+import logging as log
+
+logging = log.getLogger(__name__)
 
 def get_top_players():
     response = requests.get("https://lichess.org/api/player/top/200/classical")

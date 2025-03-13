@@ -4,7 +4,9 @@ import os
 from data.settings import Config
 from pathlib import Path
 from tqdm import tqdm  # Для прогресс-бара
-import logging
+import logging as log
+
+logging = log.getLogger(__name__)
 
 def process_pgn_file(pgn_path, writer):
     """Обрабатывает один PGN-файл"""
