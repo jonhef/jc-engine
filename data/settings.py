@@ -9,7 +9,7 @@ class BigDataConfig:
 class TrainingConfig:
     BATCH_SIZE = 768         # Увеличиваем размер батча
     NUM_EPOCHS = 5           # Количество эпох
-    LEARNING_RATE = 0.0001     # Скорость обучения
+    LEARNING_RATE = 0.0003     # Скорость обучения
     WEIGHT_DECAY = 0.01     # L2 регуляризация
     NUM_WORKERS = 8           # Количество процессов для загрузки данных
     ACCUMULATION_STEPS = 2    # Накопление градиентов для больших батчей
