@@ -14,7 +14,8 @@ with open(path, 'r', encoding='utf-8') as f:
             try:
                 board = chess.Board(row[1])
                 for move in row[2].split(' '):
+                    fen = board.fen()
                     board.push_uci(move)
-                    writer.writerow([board.fen(), move])
+                    writer.writerow([fen, move])
             except Exception as e:
                 print(e)
